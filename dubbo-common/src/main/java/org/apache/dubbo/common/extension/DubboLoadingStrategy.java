@@ -23,6 +23,9 @@ package org.apache.dubbo.common.extension;
  */
 public class DubboLoadingStrategy implements LoadingStrategy {
 
+    /**
+     * 用户自定义拓展实现
+     */
     @Override
     public String directory() {
         return "META-INF/dubbo/";

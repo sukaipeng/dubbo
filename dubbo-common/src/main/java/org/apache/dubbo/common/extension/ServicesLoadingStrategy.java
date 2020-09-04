@@ -23,6 +23,9 @@ package org.apache.dubbo.common.extension;
  */
 public class ServicesLoadingStrategy implements LoadingStrategy {
 
+    /**
+     * Java SPI配置目录
+     */
     @Override
     public String directory() {
         return "META-INF/services/";
