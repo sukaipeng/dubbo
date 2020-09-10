@@ -177,6 +177,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
     }
 
     public synchronized void export() {
+        // 是否暴露服务，取决于 org.apache.dubbo.config.AbstractServiceConfig.export
         if (!shouldExport()) {
             return;
         }

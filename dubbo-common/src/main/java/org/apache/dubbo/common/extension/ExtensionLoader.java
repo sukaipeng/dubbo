@@ -832,7 +832,7 @@ public class ExtensionLoader<T> {
      * 从配置文件中加载拓展类信息
      */
     private Map<String, Class<?>> loadExtensionClasses() {
-        // 加载拓展接口@SPI设置的值
+        // 加载拓展接口 @SPI 设置的值
         cacheDefaultExtensionName();
 
         Map<String, Class<?>> extensionClasses = new HashMap<>();
@@ -967,11 +967,14 @@ public class ExtensionLoader<T> {
                     + clazz.getName() + " is not subtype of interface.");
         }
         if (clazz.isAnnotationPresent(Adaptive.class)) {
+            // 缓存带注解 @Adaptive 的拓展实现类
             cacheAdaptiveClass(clazz, overridden);
         } else if (isWrapperClass(clazz)) {
             // 构造函数包含入参，且入参类型为拓展接口
+            // 缓存作为包装类的拓展实现类
             cacheWrapperClass(clazz);
         } else {
+            // 缓存普通的拓展实现类
             clazz.getConstructor();
             // 拓展配置文件的内容不是键值对的形式：impl1=org.apache.dubbo.common.extension.ext1.impl.SimpleExtImpl1
             // 而是 Java 的标准 SPI 形式：org.apache.dubbo.common.extension.ext1.impl.SimpleExtImpl1
@@ -1107,8 +1110,8 @@ public class ExtensionLoader<T> {
         if (cachedAdaptiveClass != null) {
             return cachedAdaptiveClass;
         }
-        // 配置文件中配置的拓展实现类都没有标记注解 @Adaptive
-        // 利用 javassist 生产拓展接口的 Adaptive 实例
+        // 所有拓展实现类都没有标记注解 @Adaptive
+        // 利用 javassist 生成拓展接口的 Adaptive 实例
         return cachedAdaptiveClass = createAdaptiveExtensionClass();
     }
 

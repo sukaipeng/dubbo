@@ -88,6 +88,7 @@ public class AdaptiveClassCodeGenerator {
      */
     public String generate() {
         // no need to generate adaptive class since there's no adaptive method found.
+        // 拓展接口至少要有一个标记注解 @Adaptive 的方法，否则抛出异常
         if (!hasAdaptiveMethod()) {
             throw new IllegalStateException("No adaptive method exist on extension " + type.getName() + ", refuse to create the adaptive class!");
         }
@@ -200,33 +201,49 @@ public class AdaptiveClassCodeGenerator {
     private String generateMethodContent(Method method) {
         Adaptive adaptiveAnnotation = method.getAnnotation(Adaptive.class);
         StringBuilder code = new StringBuilder(512);
+        // 没有标记注解 @Adaptive 的方法
         if (adaptiveAnnotation == null) {
+            // 方法内容：抛出异常 UnsupportedOperationException
             return generateUnsupported(method);
+
         } else {
+            // 从方法参数中，查找 org.apache.dubbo.common.URL 的下标
             int urlTypeIndex = getUrlTypeIndex(method);
 
             // found parameter in URL type
+            // 方法参数中存在 URL
             if (urlTypeIndex != -1) {
                 // Null Point check
+                // 校验 URL 不能为空
                 code.append(generateUrlNullCheck(urlTypeIndex));
+
+                // 方法参数中不存在 URL
             } else {
                 // did not find parameter in URL type
+                // 校验 URL 不能为空
                 code.append(generateUrlAssignmentIndirectly(method));
             }
 
+            // 获取 @Adaptive 的值，没有则用拓展接口的接口名。如 Protocol，value 为 protocol
             String[] value = getMethodAdaptiveValue(adaptiveAnnotation);
 
+            // 方法参数是否包含 org.apache.dubbo.rpc.Invocation
             boolean hasInvocation = hasInvocationArgument(method);
 
+            // 生成 org.apache.dubbo.rpc.Invocation 的非空校验
             code.append(generateInvocationArgumentNullCheck(method));
 
+            // 生成拓展实现类的简称 extName 的赋值语句
             code.append(generateExtNameAssignment(value, hasInvocation));
             // check extName == null?
+            // extName 的非空检验
             code.append(generateExtNameNullCheck(value));
 
+            // 根据 extName 获取拓展实现类
             code.append(generateExtensionAssignment());
 
             // return statement
+            // 调用拓展实现类对应的方法
             code.append(generateReturnAndInvocation(method));
         }
 
@@ -246,10 +263,16 @@ public class AdaptiveClassCodeGenerator {
     private String generateExtNameAssignment(String[] value, boolean hasInvocation) {
         // TODO: refactor it
         String getNameCode = null;
+        // 从后往前遍历
         for (int i = value.length - 1; i >= 0; --i) {
+            // 第一个遍历的元素
             if (i == value.length - 1) {
+                // 有默认拓展实现类
                 if (null != defaultExtName) {
+                    // protocol 是 org.apache.dubbo.common.URL 中组成部分，不是放在 URL 参数中，需特殊处理
+                    // 除了 protocol，其他参数都是放在 URL 请求参数中
                     if (!"protocol".equals(value[i])) {
+                        // 方法参数包含 org.apache.dubbo.rpc.Invocation
                         if (hasInvocation) {
                             getNameCode = String.format("url.getMethodParameter(methodName, \"%s\", \"%s\")", value[i], defaultExtName);
                         } else {
@@ -258,6 +281,8 @@ public class AdaptiveClassCodeGenerator {
                     } else {
                         getNameCode = String.format("( url.getProtocol() == null ? \"%s\" : url.getProtocol() )", defaultExtName);
                     }
+
+                    // 没有默认拓展实现类
                 } else {
                     if (!"protocol".equals(value[i])) {
                         if (hasInvocation) {
@@ -269,6 +294,8 @@ public class AdaptiveClassCodeGenerator {
                         getNameCode = "url.getProtocol()";
                     }
                 }
+
+                // 第二个及以后遍历的元素
             } else {
                 if (!"protocol".equals(value[i])) {
                     if (hasInvocation) {
@@ -282,7 +309,16 @@ public class AdaptiveClassCodeGenerator {
             }
         }
 
+        // 生成赋值语句
         return String.format(CODE_EXT_NAME_ASSIGNMENT, getNameCode);
+
+        // 以 Transporter 接口为例，该方法用到的参数如下：
+        // String defaultExtName = "netty";
+        // boolean hasInvocation = false;
+        // String getNameCode = null;
+        // String[] value = ["client", "transporter"];
+        // 生成的代码如下：
+        // String extName = url.getParameter("client", url.getParameter("transporter", "netty"));
     }
 
     /**
@@ -290,6 +326,9 @@ public class AdaptiveClassCodeGenerator {
      */
     private String generateExtensionAssignment() {
         return String.format(CODE_EXTENSION_ASSIGNMENT, type.getName(), ExtensionLoader.class.getSimpleName(), type.getName());
+
+        // 生成语句如下：
+        // com.alibaba.dubbo.rpc.Protocol extension = (com.alibaba.dubbo.rpc.Protocol) ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.rpc.Protocol.class).getExtension(extName);
     }
 
     /**
@@ -344,9 +383,11 @@ public class AdaptiveClassCodeGenerator {
      * if not found, throws IllegalStateException
      */
     private String generateUrlAssignmentIndirectly(Method method) {
+        // 方法所有的参数
         Class<?>[] pts = method.getParameterTypes();
 
         Map<String, Integer> getterReturnUrl = new HashMap<>();
+        // 遍历方法参数的所有方法，查找 org.apache.dubbo.common.URL
         // find URL getter method
         for (int i = 0; i < pts.length; ++i) {
             for (Method m : pts[i].getMethods()) {
@@ -361,6 +402,7 @@ public class AdaptiveClassCodeGenerator {
             }
         }
 
+        // 如果都不存在 org.apache.dubbo.common.URL，则抛出异常
         if (getterReturnUrl.size() <= 0) {
             // getter method not found, throw
             throw new IllegalStateException("Failed to create adaptive class for interface " + type.getName()

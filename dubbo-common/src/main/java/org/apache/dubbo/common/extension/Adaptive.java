@@ -25,6 +25,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * 作用于类或方法上。
+ * 作用于类时，dubbo 不会自动生成代理类，代理逻辑需人工编码
+ * 作用于方法时，dubbo 会自动生成代理逻辑
+ *
  * Provide helpful information for {@link ExtensionLoader} to inject dependency extension instance.
  *
  * @see ExtensionLoader

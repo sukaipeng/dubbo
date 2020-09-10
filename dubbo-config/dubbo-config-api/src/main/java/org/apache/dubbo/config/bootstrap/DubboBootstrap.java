@@ -178,13 +178,16 @@ public class DubboBootstrap extends GenericEventListener {
      */
     public static synchronized DubboBootstrap getInstance() {
         if (instance == null) {
+            // 静态属性
             instance = new DubboBootstrap();
         }
         return instance;
     }
 
     private DubboBootstrap() {
+        // SPI 注入 org.apache.dubbo.config.context.ConfigManager
         configManager = ApplicationModel.getConfigManager();
+        // SPI 注入 org.apache.dubbo.common.config.Environment
         environment = ApplicationModel.getEnvironment();
 
         DubboShutdownHook.getDubboShutdownHook().register();
