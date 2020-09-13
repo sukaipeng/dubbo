@@ -185,11 +185,12 @@ public class DubboBootstrap extends GenericEventListener {
     }
 
     private DubboBootstrap() {
-        // SPI 注入 org.apache.dubbo.config.context.ConfigManager
+        // 获取 org.apache.dubbo.config.context.ConfigManager
         configManager = ApplicationModel.getConfigManager();
-        // SPI 注入 org.apache.dubbo.common.config.Environment
+        // 获取 org.apache.dubbo.common.config.Environment
         environment = ApplicationModel.getEnvironment();
 
+        // 注册 dubbo 服务下线钩子
         DubboShutdownHook.getDubboShutdownHook().register();
         ShutdownHookCallbacks.INSTANCE.addCallback(new ShutdownHookCallback() {
             @Override
@@ -502,12 +503,16 @@ public class DubboBootstrap extends GenericEventListener {
 
     /**
      * Initialize
+     *
+     * 初始化 dubbo 启动类
      */
     public void initialize() {
         if (!initialized.compareAndSet(false, true)) {
             return;
         }
 
+        // 分别初始化 FrameworkExt 接口的三个实现类 ConfigManager、Environment、ServiceRepository
+        // 分别调用他们的 initialize 方法，目前只有 Environment 重写了该方法，其他两个都是空实现
         ApplicationModel.initFrameworkExts();
 
         startConfigCenter();
@@ -590,6 +595,7 @@ public class DubboBootstrap extends GenericEventListener {
 
     private void startConfigCenter() {
 
+        // 当没有 config center 时，默认使用 registry 作为注册中心
         useRegistryAsConfigCenterIfNecessary();
 
         Collection<ConfigCenterConfig> configCenters = configManager.getConfigCenters();
@@ -650,15 +656,18 @@ public class DubboBootstrap extends GenericEventListener {
      */
     private void useRegistryAsConfigCenterIfNecessary() {
         // we use the loading status of DynamicConfiguration to decide whether ConfigCenter has been initiated.
+        // Environment 的普通属性 DynamicConfiguration 已经存在
         if (environment.getDynamicConfiguration().isPresent()) {
             return;
         }
 
+        // key 为 config-center 的 map 不为空
         if (CollectionUtils.isNotEmpty(configManager.getConfigCenters())) {
             return;
         }
 
         configManager
+                // key 为 registry-config
                 .getDefaultRegistries()
                 .stream()
                 .filter(this::isUsedRegistryAsConfigCenter)

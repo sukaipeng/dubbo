@@ -59,7 +59,9 @@ public class Environment extends LifecycleAdapter implements FrameworkExt {
 
     @Override
     public void initialize() throws IllegalStateException {
+        // ConfigManager 也是 FrameworkExt 接口的实现类
         ConfigManager configManager = ApplicationModel.getConfigManager();
+        // 获取 ConfigManager 的缓存配置类
         Optional<Collection<ConfigCenterConfig>> defaultConfigs = configManager.getDefaultConfigCenter();
         defaultConfigs.ifPresent(configs -> {
             for (ConfigCenterConfig config : configs) {

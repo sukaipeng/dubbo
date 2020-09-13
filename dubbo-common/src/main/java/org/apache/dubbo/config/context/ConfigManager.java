@@ -135,8 +135,15 @@ public class ConfigManager extends LifecycleAdapter implements FrameworkExt {
     }
 
     public Optional<Collection<ConfigCenterConfig>> getDefaultConfigCenter() {
-        Collection<ConfigCenterConfig> defaults = getDefaultConfigs(getConfigsMap(getTagName(ConfigCenterConfig.class)));
+        Collection<ConfigCenterConfig> defaults =
+                // 过滤 config，条件为：不存在 isDefault 方法或 isDefault 返回 true
+                getDefaultConfigs(
+                        // 用 config-center 作为 key 到 configsCache 中获取 map，没有则返回空 map
+                        getConfigsMap(
+                                // 转化为：config-center
+                                getTagName(ConfigCenterConfig.class)));
         if (CollectionUtils.isEmpty(defaults)) {
+            // 逻辑和上面方法的逻辑类似，但是不用 isDefault 过滤 config
             defaults = getConfigCenters();
         }
         return Optional.ofNullable(defaults);
@@ -452,6 +459,9 @@ public class ConfigManager extends LifecycleAdapter implements FrameworkExt {
         });
     }
 
+    /**
+     * 读锁，读取数据
+     */
     private <V> V read(Callable<V> callable) {
         Lock readLock = lock.readLock();
         V value = null;

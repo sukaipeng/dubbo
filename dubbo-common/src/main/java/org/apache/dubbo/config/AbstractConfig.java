@@ -96,8 +96,13 @@ public abstract class AbstractConfig implements Serializable {
         return value;
     }
 
+    /**
+     * 将“驼峰大小写”转化为“-”的写法，如下：
+     * ConfigCenterConfig.class -> config-center
+     */
     public static String getTagName(Class<?> cls) {
         String tag = cls.getSimpleName();
+        // 删除后缀 "Config", "Bean", "ConfigBase"
         for (String suffix : SUFFIXES) {
             if (tag.endsWith(suffix)) {
                 tag = tag.substring(0, tag.length() - suffix.length());

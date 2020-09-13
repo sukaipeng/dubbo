@@ -37,6 +37,9 @@ public class Application {
         return args.length > 0 && "classic".equalsIgnoreCase(args[0]);
     }
 
+    /**
+     * 新的服务导出方法
+     */
     private static void startWithBootstrap() {
         ServiceConfig<DemoServiceImpl> service = new ServiceConfig<>();
         service.setInterface(DemoService.class);
@@ -50,6 +53,9 @@ public class Application {
                 .await();
     }
 
+    /**
+     * 旧的服务导出方法
+     */
     private static void startWithExport() throws InterruptedException {
         ServiceConfig<DemoServiceImpl> service = new ServiceConfig<>();
         service.setInterface(DemoService.class);
