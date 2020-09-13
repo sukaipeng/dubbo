@@ -24,22 +24,47 @@ import java.lang.annotation.Target;
 
 /**
  * Parameter
+ *
+ * 配置在对象的 getter 方法上
+ * todo
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
 public @interface Parameter {
 
+    /**
+     * 键名，作为 URL 参数的键名
+     */
     String key() default "";
 
+    /**
+     * getter 方法的返回值是否必须，不可以为空
+     */
     boolean required() default false;
 
+    /**
+     * 是否忽略
+     * 不会将 getter 方法的返回值添加到 URL 参数中
+     */
     boolean excluded() default false;
 
+    /**
+     * 是否需要转义
+     * 调用 java.net.URLEncoder#encode(java.lang.String, java.lang.String)
+     */
     boolean escaped() default false;
 
+    /**
+     * 是否属性
+     * 用到的地方，只有事件通知 http://dubbo.apache.org/zh-cn/docs/user/demos/events-notify.html
+     */
     boolean attribute() default false;
 
+    /**
+     * 是否拼接
+     * 如果 URL 参数中，已经存在相同键名的 entry
+     */
     boolean append() default false;
 
 }

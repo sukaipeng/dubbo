@@ -136,6 +136,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     protected void checkApplication() {
         // for backward compatibility
         if (application == null) {
+            // 若系统属性 dubbo.application.name 不为空，则创建 ApplicationConfig
             String applicationName = ConfigUtils.getProperty("dubbo.application.name");
             if (applicationName != null && applicationName.length() > 0) {
                 application = new ApplicationConfig();
@@ -145,12 +146,15 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
             throw new IllegalStateException(
                     "No such application config! Please add <dubbo:application name=\"...\" /> to your spring config.");
         }
+        // 初始化 ApplicationConfig
         appendProperties(application);
 
+        // dubbo.service.shutdown.wait
         String wait = ConfigUtils.getProperty(Constants.SHUTDOWN_WAIT_KEY);
         if (wait != null && wait.trim().length() > 0) {
             System.setProperty(Constants.SHUTDOWN_WAIT_KEY, wait.trim());
         } else {
+            // dubbo.service.shutdown.wait.seconds
             wait = ConfigUtils.getProperty(Constants.SHUTDOWN_WAIT_SECONDS_KEY);
             if (wait != null && wait.trim().length() > 0) {
                 System.setProperty(Constants.SHUTDOWN_WAIT_SECONDS_KEY, wait.trim());

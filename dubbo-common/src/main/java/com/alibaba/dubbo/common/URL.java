@@ -67,6 +67,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @see java.net.URL
  * @see java.net.URI
+ *
+ * 例如：protocol://username:password@host:port/path?key=value&key=value
  */
 public final class URL implements Serializable {
 

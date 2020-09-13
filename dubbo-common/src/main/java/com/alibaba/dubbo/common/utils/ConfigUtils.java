@@ -140,14 +140,26 @@ public class ConfigUtils {
         return sb.toString();
     }
 
+    /**
+     * 获取配置文件的属性
+     *
+     * System.getProperty() 和 System.getenv() 的区别
+     *
+     * System.getProperty() 所获取的 Property 是可读可写的，而 System.getenv() 获取的环境变量只可读不可写。
+     * System.getProperty() 要求我们提供默认项，而使用 System.getenv() 时需要考虑 null 的情况
+     * Property 只对 Java 程序有影响，而环境变量会影响整个平台下的所有应有程序
+     */
     public static Properties getProperties() {
         if (PROPERTIES == null) {
             synchronized (ConfigUtils.class) {
                 if (PROPERTIES == null) {
+                    // 系统属性 dubbo.properties.file
                     String path = System.getProperty(Constants.DUBBO_PROPERTIES_KEY);
                     if (path == null || path.length() == 0) {
+                        // 环境变量 dubbo.properties.file
                         path = System.getenv(Constants.DUBBO_PROPERTIES_KEY);
                         if (path == null || path.length() == 0) {
+                            // 默认配置文件名 dubbo.properties
                             path = Constants.DEFAULT_DUBBO_PROPERTIES;
                         }
                     }
@@ -174,10 +186,12 @@ public class ConfigUtils {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static String getProperty(String key, String defaultValue) {
+        // 从系统属性中获取
         String value = System.getProperty(key);
         if (value != null && value.length() > 0) {
             return value;
         }
+        // 从配置文件中获取
         Properties properties = getProperties();
         return replaceProperty(properties.getProperty(key, defaultValue), (Map) properties);
     }
