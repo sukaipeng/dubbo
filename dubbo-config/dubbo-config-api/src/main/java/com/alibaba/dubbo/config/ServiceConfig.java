@@ -83,7 +83,11 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     // interface type
     private String interfaceName;
     private Class<?> interfaceClass;
-    // reference to interface impl
+    /**
+     * reference to interface impl
+     *
+     * 接口实现类
+     */
     private T ref;
     // service name
     private String path;
@@ -194,10 +198,13 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     }
 
     public synchronized void export() {
+        // 服务提供者缺省值配置
         if (provider != null) {
+            // 是否导出服务
             if (export == null) {
                 export = provider.getExport();
             }
+            // 延迟导出
             if (delay == null) {
                 delay = provider.getDelay();
             }
@@ -206,6 +213,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             return;
         }
 
+        // 延迟导出
         if (delay != null && delay > 0) {
             delayExportExecutor.schedule(new Runnable() {
                 @Override
@@ -213,6 +221,8 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                     doExport();
                 }
             }, delay, TimeUnit.MILLISECONDS);
+
+            // 立即导出
         } else {
             doExport();
         }
@@ -222,6 +232,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         if (unexported) {
             throw new IllegalStateException("Already unexported!");
         }
+        // 已经导出
         if (exported) {
             return;
         }
@@ -229,7 +240,9 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         if (interfaceName == null || interfaceName.length() == 0) {
             throw new IllegalStateException("<dubbo:service interface=\"\" /> interface not allow null!");
         }
+        // 初始化 provider 的属性，从系统属性或 dubbo.properties 中取值
         checkDefault();
+        // provider 优先级最低
         if (provider != null) {
             if (application == null) {
                 application = provider.getApplication();
@@ -247,6 +260,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 protocols = provider.getProtocols();
             }
         }
+        // module 优先级第二
         if (module != null) {
             if (registries == null) {
                 registries = module.getRegistries();
@@ -255,6 +269,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 monitor = module.getMonitor();
             }
         }
+        // application 优先级最高
         if (application != null) {
             if (registries == null) {
                 registries = application.getRegistries();
@@ -263,6 +278,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 monitor = application.getMonitor();
             }
         }
+        // 实现泛接口 http://dubbo.apache.org/zh-cn/docs/user/demos/generic-service.html
         if (ref instanceof GenericService) {
             interfaceClass = GenericService.class;
             if (StringUtils.isEmpty(generic)) {
@@ -275,10 +291,13 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             } catch (ClassNotFoundException e) {
                 throw new IllegalStateException(e.getMessage(), e);
             }
+            // 接口存在，且方法定义在接口中
             checkInterfaceAndMethods(interfaceClass, methods);
+            // 接口和实现类的关系
             checkRef();
             generic = Boolean.FALSE.toString();
         }
+        // local 已废弃，使用 stub 替代
         if (local != null) {
             if ("true".equals(local)) {
                 local = interfaceName + "Local";
@@ -293,6 +312,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 throw new IllegalStateException("The local implementation class " + localClass.getName() + " not implement interface " + interfaceName);
             }
         }
+        // 本地存根 http://dubbo.apache.org/zh-cn/docs/user/demos/local-stub.html
         if (stub != null) {
             if ("true".equals(stub)) {
                 stub = interfaceName + "Stub";
@@ -307,8 +327,11 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 throw new IllegalStateException("The stub implementation class " + stubClass.getName() + " not implement interface " + interfaceName);
             }
         }
+        // 校验 application
         checkApplication();
+        // 校验 registry
         checkRegistry();
+        // todo
         checkProtocol();
         appendProperties(this);
         checkStub(interfaceClass);
@@ -703,6 +726,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         if (provider == null) {
             provider = new ProviderConfig();
         }
+        // 初始化 ProviderConfig 的属性
         appendProperties(provider);
     }
 

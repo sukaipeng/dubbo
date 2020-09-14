@@ -102,6 +102,7 @@ public abstract class AbstractConfig implements Serializable {
             return;
         }
         // prefix 值为 dubbo.application.
+        // dubbo.registry.
         String prefix = "dubbo." + getTagName(config.getClass()) + ".";
         Method[] methods = config.getClass().getMethods();
         for (Method method : methods) {
@@ -117,7 +118,7 @@ public abstract class AbstractConfig implements Serializable {
                     String property = StringUtils.camelToSplitName(name.substring(3, 4).toLowerCase() + name.substring(4), ".");
 
                     String value = null;
-                    // 配置类的 id，从系统属性获取 value
+                    // prefix + 配置类的 id + 属性名，从系统属性获取 value
                     if (config.getId() != null && config.getId().length() > 0) {
                         String pn = prefix + config.getId() + "." + property;
                         value = System.getProperty(pn);
@@ -125,7 +126,7 @@ public abstract class AbstractConfig implements Serializable {
                             logger.info("Use System Property " + pn + " to config dubbo");
                         }
                     }
-                    // 属性名，从系统属性获取 value
+                    // prefix + 属性名，从系统属性获取 value
                     if (value == null || value.length() == 0) {
                         String pn = prefix + property;
                         value = System.getProperty(pn);
@@ -135,8 +136,9 @@ public abstract class AbstractConfig implements Serializable {
                     }
                     // 从系统属性、配置文件 dubbo.properties 中获取 value
                     if (value == null || value.length() == 0) {
-                        Method getter;
                         // 获取属性的 getter 方法
+                        // getter 有值就不用设置值
+                        Method getter;
                         try {
                             getter = config.getClass().getMethod("get" + name.substring(3));
                         } catch (NoSuchMethodException e) {
@@ -149,12 +151,15 @@ public abstract class AbstractConfig implements Serializable {
                         if (getter != null) {
                             if (getter.invoke(config) == null) {
                                 if (config.getId() != null && config.getId().length() > 0) {
+                                    // prefix + 配置类的 id + 属性名
                                     value = ConfigUtils.getProperty(prefix + config.getId() + "." + property);
                                 }
                                 if (value == null || value.length() == 0) {
+                                    // prefix + 属性名
                                     value = ConfigUtils.getProperty(prefix + property);
                                 }
                                 if (value == null || value.length() == 0) {
+                                    // prefix + 属性名 转化
                                     String legacyKey = legacyProperties.get(prefix + property);
                                     if (legacyKey != null && legacyKey.length() > 0) {
                                         value = convertLegacyValue(legacyKey, ConfigUtils.getProperty(legacyKey));
